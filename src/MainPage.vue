@@ -228,6 +228,7 @@ const removeFilter = (filterId, value) => {
   &__active-filters {
     display: flex;
     padding: 0px 6px;
+    flex-wrap: wrap;
     li {
       margin: 10px;
       border: solid 1px var(--grey-dark);
