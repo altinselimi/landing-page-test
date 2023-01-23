@@ -278,7 +278,9 @@ const removeFilter = (filterId, value) => {
         margin-left: 8px;
         margin-left: auto;
       }
-      &:hover {
+      &:hover,
+      &[data-headlessui-state="active"],
+      &[data-headlessui-state="active selected"] {
         background-color: var(--grey);
       }
     }
