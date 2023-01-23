@@ -8,10 +8,11 @@ import {
   ListboxOptions,
   ListboxOption,
 } from "@headlessui/vue";
-import { ChevronDown, Check, X } from "lucide-vue-next";
+import { ChevronDown, Check, X, Loader } from "lucide-vue-next";
 
 const store = useStore();
-store.dispatch("fetchPhones");
+const hasFetchedPhones = ref(false);
+store.dispatch("fetchPhones").then(() => (hasFetchedPhones.value = true));
 const phones = computed(() => store.state.phones);
 
 const filters = computed(() => ({
@@ -133,68 +134,85 @@ const removeFilter = (filterId, value) => {
 };
 </script>
 <template>
-  <h1 v-if="filteredPhones.length">
-    Choose from
-    <span style="font-weight: 900">{{ filteredPhones.length }} phones</span>
-  </h1>
-  <h1 v-else>No match could be made. Please try some different filters.</h1>
-  <ul class="filters__wrapper">
-    <li v-for="filter in filters">
-      <Listbox v-model="filterModelValues[filter.id]" multiple>
-        <Float :offset="10">
-          <ListboxButton class="filter__button">
-            {{ filter.label }} <ChevronDown />
-          </ListboxButton>
-          <ListboxOptions as="ul" class="filter__dropdown-content">
-            <ListboxOption
-              v-for="option in filter.options"
-              :key="option.value"
-              as="li"
-              :value="option.value"
-              v-slot="{ selected }"
-            >
-              {{ option.label }}
-              <Check :class="{ 'is-invisible': !selected }" />
-            </ListboxOption>
-          </ListboxOptions>
-        </Float>
-      </Listbox>
-    </li>
-  </ul>
-  <ul class="filters__active-filters">
-    <li
-      v-for="activeFilter in activeFilterWithLabels"
-      class="active-filter__label"
+  <template v-if="!hasFetchedPhones">
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin: auto;
+      "
     >
-      <span>
-        {{ activeFilter.label }}
-      </span>
-      <button @click="removeFilter(activeFilter.id, activeFilter.value)">
-        <X />
-      </button>
-    </li>
-  </ul>
-  <ul class="phones__wrapper">
-    <li class="phone__wrapper" v-for="phone in filteredPhones">
-      <img
-        src="/product_image.webp"
-        loading="lazy"
-        :alt="`Phone: ${phone.name} by ${phone.manufacturer}`"
-      />
-      <div class="phone__action-buttons">
-        <div class="phone__info">
-          <div class="phone__brand text-truncate">{{ phone.manufacturer }}</div>
-          <div class="phone__name text-truncate">
-            {{ phone.name }}
-          </div>
-        </div>
-        <button>
-          Bekijk
-          <ChevronDown style="transform: rotate(-90deg)" />
+      <Loader class="is-spinning" />
+      <span>Loading...</span>
+    </div>
+  </template>
+  <template v-else>
+    <h1 v-if="filteredPhones.length">
+      Choose from
+      <span style="font-weight: 900">{{ filteredPhones.length }} phones</span>
+    </h1>
+    <h1 v-else>No match could be made. Please try some different filters.</h1>
+    <ul class="filters__wrapper">
+      <li v-for="filter in filters">
+        <Listbox v-model="filterModelValues[filter.id]" multiple>
+          <Float :offset="10">
+            <ListboxButton class="filter__button">
+              {{ filter.label }} <ChevronDown />
+            </ListboxButton>
+            <ListboxOptions as="ul" class="filter__dropdown-content">
+              <ListboxOption
+                v-for="option in filter.options"
+                :key="option.value"
+                as="li"
+                :value="option.value"
+                v-slot="{ selected }"
+              >
+                {{ option.label }}
+                <Check :class="{ 'is-invisible': !selected }" />
+              </ListboxOption>
+            </ListboxOptions>
+          </Float>
+        </Listbox>
+      </li>
+    </ul>
+    <ul class="filters__active-filters">
+      <li
+        v-for="activeFilter in activeFilterWithLabels"
+        class="active-filter__label"
+      >
+        <span>
+          {{ activeFilter.label }}
+        </span>
+        <button @click="removeFilter(activeFilter.id, activeFilter.value)">
+          <X />
         </button>
-      </div>
-    </li>
-  </ul>
+      </li>
+    </ul>
+    <ul class="phones__wrapper">
+      <li class="phone__wrapper" v-for="phone in filteredPhones">
+        <img
+          src="/product_image.webp"
+          loading="lazy"
+          :alt="`Phone: ${phone.name} by ${phone.manufacturer}`"
+        />
+        <div class="phone__action-buttons">
+          <div class="phone__info">
+            <div class="phone__brand text-truncate">
+              {{ phone.manufacturer }}
+            </div>
+            <div class="phone__name text-truncate">
+              {{ phone.name }}
+            </div>
+          </div>
+          <button>
+            Bekijk
+            <ChevronDown style="transform: rotate(-90deg)" />
+          </button>
+        </div>
+      </li>
+    </ul>
+  </template>
 </template>
 
 <style lang="scss" scoped>
@@ -240,6 +258,7 @@ const removeFilter = (filterId, value) => {
     min-width: 100%;
     background-color: rgba(white, 0.7);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: rgb(0 0 0 / 9%) 0px 3px 12px;
@@ -272,6 +291,9 @@ const removeFilter = (filterId, value) => {
   grid-row-gap: 20px;
   margin: 20px 0px;
   padding: 0px;
+  @media only screen and (max-width: 820px) {
+    grid-template-columns: 1fr;
+  }
 }
 .phone {
   &__wrapper {
